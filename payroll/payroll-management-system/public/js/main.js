@@ -30,6 +30,38 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    const calculateAssetDeduction = async (employeeId, month, year) => {
+        if (!employeeId || !month || !year) {
+            return 0;
+        }
+
+        try {
+            const response = await fetch('/api/payroll/asset-deduction', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    employeeId,
+                    month: parseInt(month),
+                    year: parseInt(year)
+                })
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                return result.assetsDeduction;
+            } else {
+                console.error('Failed to calculate asset deduction:', result.message);
+                return 0;
+            }
+        } catch (error) {
+            console.error('Error calculating asset deduction:', error);
+            return 0;
+        }
+    };
+
     const fetchAndDisplayHistory = async (employeeId) => {
         if (!employeeId) {
             historyContainer.innerHTML = '';
@@ -133,10 +165,33 @@ document.addEventListener('DOMContentLoaded', () => {
         historyContainer.insertAdjacentHTML('beforeend', details);
     };
 
-    employeeSelect.addEventListener('change', (e) => {
+    employeeSelect.addEventListener('change', async (e) => {
         const employeeId = e.target.value;
         resultsContainer.innerHTML = '';
         fetchAndDisplayHistory(employeeId);
+        
+        // Update asset deduction when employee is selected
+        const assetsDeductionInput = document.getElementById('assetsDeduction');
+        const month = monthInput.value;
+        const year = yearInput.value;
+        
+        if (employeeId && month && year) {
+            const deduction = await calculateAssetDeduction(employeeId, month, year);
+            assetsDeductionInput.value = deduction;
+        }
+    });
+
+    // Update asset deduction when month is changed
+    monthInput.addEventListener('change', async () => {
+        const employeeId = employeeSelect.value;
+        const month = monthInput.value;
+        const year = yearInput.value;
+        const assetsDeductionInput = document.getElementById('assetsDeduction');
+        
+        if (employeeId && month && year) {
+            const deduction = await calculateAssetDeduction(employeeId, month, year);
+            assetsDeductionInput.value = deduction;
+        }
     });
 
     addEmployeeForm.addEventListener('submit', async (e) => {

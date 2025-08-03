@@ -2,7 +2,8 @@ const express = require('express');
 const router = express.Router();
 const { 
     calculatePayroll,
-    getPayrollHistory
+    getPayrollHistory,
+    calculateAssetDeduction
 } = require('../controllers/payrollController');
 
 // Debug middleware to log all requests to payroll routes
@@ -21,5 +22,9 @@ router.get('/history/:employeeId', (req, res, next) => {
     console.log('Payroll history route called with employeeId:', req.params.employeeId);
     next();
 }, getPayrollHistory);
+
+// @route   POST /api/payroll/asset-deduction
+// @desc    Calculate asset deduction for an employee for a specific month
+router.post('/asset-deduction', calculateAssetDeduction);
 
 module.exports = router;
