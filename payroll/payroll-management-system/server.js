@@ -30,6 +30,12 @@ app.get('/', (req, res) => {
 // We will add our API routes here later
 app.use('/api/employees', require('./routes/employeeRoutes'));
 app.use('/api/payroll', require('./routes/payrollRoutes'));
+app.use('/assets', require('./routes/assetRoutes'));
+
+app.use((req, res, next) => {
+    console.log(`Unmatched request: ${req.method} ${req.originalUrl}`);
+    next();
+});
 
 // 404 handler
 app.use((req, res) => {

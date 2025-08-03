@@ -1,12 +1,27 @@
 const mongoose = require('mongoose');
 const Employee = require('../models/Employee');
 const Payroll = require('../models/Payroll');
+const AssetAssignment = require('../models/AssetAssignment');
 
 exports.calculatePayroll = async (req, res) => {
     try {
         const { employeeId, daysWorked, month, year, pfPercentage, esiPercentage } = req.body;
         const advanceDeduction = parseFloat(req.body.advanceDeduction || 0);
-        const assetsDeduction = parseFloat(req.body.assetsDeduction || 0);
+        
+        // Format month and year to match AssetAssignment month format (YYYY-MM)
+        const formattedMonth = `${year}-${String(month).padStart(2, '0')}`;
+        
+        // Find asset assignments for this employee and month
+        const assetAssignments = await AssetAssignment.find({
+            employee: employeeId,
+            month: formattedMonth
+        }).populate('asset');
+        
+        // Calculate total asset deduction
+        let assetsDeduction = 0;
+        for (const assignment of assetAssignments) {
+            assetsDeduction += assignment.quantity * assignment.asset.price;
+        }
 
         const employee = await Employee.findById(employeeId);
         if (!employee) {
@@ -117,6 +132,39 @@ exports.getPayrollHistory = async (req, res) => {
         res.status(500).json({ 
             success: false, 
             message: 'Internal server error',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+};
+
+exports.calculateAssetDeduction = async (req, res) => {
+    try {
+        const { employeeId, month, year } = req.body;
+        
+        // Format month and year to match AssetAssignment month format (YYYY-MM)
+        const formattedMonth = `${year}-${String(month).padStart(2, '0')}`;
+        
+        // Find asset assignments for this employee and month
+        const assetAssignments = await AssetAssignment.find({
+            employee: employeeId,
+            month: formattedMonth
+        }).populate('asset');
+        
+        // Calculate total asset deduction
+        let assetsDeduction = 0;
+        for (const assignment of assetAssignments) {
+            assetsDeduction += assignment.quantity * assignment.asset.price;
+        }
+        
+        res.status(200).json({
+            success: true,
+            assetsDeduction: assetsDeduction
+        });
+    } catch (error) {
+        console.error('Error calculating asset deduction:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error calculating asset deduction',
             error: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }
