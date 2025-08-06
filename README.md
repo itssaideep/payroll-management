@@ -54,7 +54,7 @@ A comprehensive web-based payroll management system built with Node.js, Express,
 
 4. Start the application:
    ```bash
-   npm start
+   node server.js
    ```
 
 5. Open your browser and navigate to `http://localhost:3000`
@@ -101,7 +101,7 @@ payroll-management-system/
 │   ├── index.ejs         # Main dashboard
 │   └── assets/
 │       └── list.ejs      # Asset management page
-├── .env.example          # Example environment variables
+├── .env                  # Example environment variables
 ├── .gitignore            # Git ignore file
 ├── package.json          # Project dependencies
 ├── README.md             # This file
